@@ -1,0 +1,6 @@
+@P2p_Clean_Architecture________b_HostAddress = http://localhost:5232
+
+GET {{P2p_Clean_Architecture________b_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
