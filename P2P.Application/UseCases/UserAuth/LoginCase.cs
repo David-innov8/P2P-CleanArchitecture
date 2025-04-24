@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Http;
 using P2P.Application.DTOs;
 using P2P.Application.UseCases.Interfaces;
 using P2P.Domains.Entities;
@@ -11,12 +12,14 @@ public class LoginCase: ILoginUserUseCase
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public LoginCase( IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator)
+    public LoginCase( IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator, IHttpContextAccessor httpContextAccessor)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     public async Task<ApiResponse<LoginResponse>> Login(LoginDto loginDto)
@@ -40,6 +43,23 @@ public class LoginCase: ILoginUserUseCase
 
         var token = _jwtTokenGenerator.GenerateUserJwtToken(existingUser);
 
+        
+        var userAgent = _httpContextAccessor.HttpContext.Request.Headers["User-Agent"].ToString() ?? "Unknown Device";
+        
+        var IpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
+        
+        var location = await GetLocationFromIP(IpAddress);
+        
+        
+        var placeholders = new Dictionary<string, string>
+        {
+            { "{UserName}", existingUser.Username },
+            { "{DeviceName}", userAgent },
+            {"{Location}", location},
+            {"{LoginDateTime}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}
+  
+        };
+
         return ApiResponse<LoginResponse>.SuccessResponse(new LoginResponse()
         {
             Token = token,
@@ -49,4 +69,22 @@ public class LoginCase: ILoginUserUseCase
             
         });
     }
+    
+    private async Task<string> GetLocationFromIP(string ipAddress)
+    {
+        if (string.IsNullOrWhiteSpace(ipAddress) || ipAddress == "::1") // Handle localhost
+            return "Localhost";
+
+        using var httpClient = new HttpClient();
+        var response = await httpClient.GetAsync($"http://ip-api.com/json/{ipAddress}");
+        if (response.IsSuccessStatusCode)
+        {
+            var jsonResponse = await response.Content.ReadAsStringAsync();
+            dynamic locationData = Newtonsoft.Json.JsonConvert.DeserializeObject(jsonResponse);
+            return $"{locationData.city}, {locationData.country}";
+        }
+
+        return "Unknown Location";
+    }
+
 }

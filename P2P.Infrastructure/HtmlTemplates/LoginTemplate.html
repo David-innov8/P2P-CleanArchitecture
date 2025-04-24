@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Notification</title>
+    <style>
+        /* Reset styles for email clients */
+        body, table, td, div, p {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+        }
+
+        /* Responsive container */
+        .container {
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: #ffffff;
+        }
+
+        /* Header styles */
+        .header {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+        }
+
+        /* Content styles */
+        .content {
+            padding: 30px 20px;
+            color: #333333;
+        }
+
+        /* Button styles */
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #007bff;
+            color: #ffffff;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 20px 0;
+        }
+
+        /* Footer styles */
+        .footer {
+            background-color: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #666666;
+        }
+
+        /* Responsive adjustments */
+        @media screen and (max-width: 600px) {
+            .container {
+                width: 100% !important;
+            }
+            .content {
+                padding: 20px 15px !important;
+            }
+        }
+    </style>
+</head>
+<body>
+<table class="container" cellpadding="0" cellspacing="0" border="0">
+    <tr>
+        <td class="header">
+            <img src="https://i.postimg.cc/VLSCv6Gn/Frame-1.png" alt="PairTo Logo" style="max-width: 100px; height: auto;">
+
+        </td>
+    </tr>
+    <tr>
+        <td class="content">
+            <h2>Hello {UserName},</h2>
+            <p>We noticed a login to your account from a new device or location.</p>
+
+            <p>Here are the details:</p>
+            <ul>
+                <li><strong>Device:</strong> {DeviceName}</li>
+                <li><strong>Location:</strong> {Location}</li>
+                <li><strong>Date & Time:</strong> {LoginDateTime}</li>
+            </ul>
+
+            <p>If this was you, no action is required. You can safely ignore this email.</p>
+
+            <p>If you did not perform this login, please contact support.</p>
+
+            <!--            <a href="{SecureAccountURL}" class="button">Secure My Account</a>-->
+
+            <p>If you have any questions or concerns, feel free to contact our support team.</p>
+
+            <p>Stay safe,<br>The PairTo Team</p>
+        </td>
+    </tr>
+    <tr>
+        <td class="footer">
+            <p>© 2024 PairTo. All rights reserved.</p>
+            <p>You're receiving this email because of activity on your PairTo account.</p>
+            <!--            <p><a href="{UnsubscribeURL}">Unsubscribe</a></p>-->
+        </td>
+    </tr>
+</table>
+</body>
+</html>

@@ -109,4 +109,13 @@ public class User
         Profile = newProfile;
         Audit = Audit with { UpdatedAt = DateTime.Now }; // Update audit info
     }
+    
+    public void AddAccount(Account account)
+    {
+        if (account == null)
+            throw new ArgumentNullException(nameof(account));
+        
+        Accounts.Add(account);
+        Audit = Audit with { UpdatedAt = DateTime.Now };
+    }
 }

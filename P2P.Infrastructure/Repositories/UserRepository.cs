@@ -53,6 +53,22 @@ public class UserRepository : IUserRepository
         return user;
     }
 
+    public async Task<string> GetUserEmailFromClaimsAsync()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+
+        if (string.IsNullOrEmpty(userIdClaim))
+            throw new Exception("User ID claim not found.");
+
+     
+        var user = await _context.Users.FindAsync(userIdClaim);
+
+        if (user == null)
+            throw new Exception("User not found.");
+
+        return user.Email;
+    }
+
     public async Task AddUserAsync(User user)
     {
         await _context.Users.AddAsync(user);

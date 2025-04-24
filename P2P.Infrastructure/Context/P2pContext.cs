@@ -20,6 +20,17 @@ public class P2pContext :DbContext
 
         modelBuilder.Entity<User>(builder =>
         {
+            builder.HasKey(e => e.Id);
+            builder.Property(e => e.Username).IsRequired();
+            builder.Property(e => e.Email).IsRequired();
+            builder.HasIndex(e => e.Email).IsUnique();
+            builder.HasIndex(e => e.Username).IsUnique();
+            
+            builder.HasMany(e => e.Accounts)
+                .WithOne()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             builder.OwnsOne(u => u.Password);
             builder.OwnsOne(u => u.Pin);
             builder.OwnsOne(u => u.Profile);
@@ -27,6 +38,15 @@ public class P2pContext :DbContext
             builder.OwnsOne(u => u.Audit);
             builder.OwnsOne(u => u.EngagementMetrics);
             builder.OwnsOne(u => u.Consent);
+        });
+        
+        modelBuilder.Entity<Account>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.AccountNumber).IsRequired();
+            entity.HasIndex(e => e.AccountNumber).IsUnique();
+            entity.Property(e => e.Balance).HasColumnType("decimal(18,2)");
+            entity.Property(e => e.Currency).IsRequired();
         });
     }
         

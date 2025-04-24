@@ -12,10 +12,13 @@ namespace P2P.Infrastructure.Services;
 public class JwtTokenGenerator:IJwtTokenGenerator
 {
     private readonly JwtSettings _jwtSettings;
-
+   
     public JwtTokenGenerator(IOptions<JwtSettings> jwtSettings)
     {
         _jwtSettings = jwtSettings.Value;
+        
+
+
     }
 
     public string GenerateUserJwtToken(User user)
@@ -40,4 +43,57 @@ public class JwtTokenGenerator:IJwtTokenGenerator
         
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
+    
+    public string GenerateResetToken(string email)
+    {
+        var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+        var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
+
+        var claims = new[]
+        {
+            new Claim(ClaimTypes.Email, email),
+            // new Claim(ClaimTypes.Expiration, DateTime.UtcNow.AddMinutes(15).ToString())
+        };
+
+        var token = new JwtSecurityToken(
+            issuer: _jwtSettings.Issuer,
+            audience: _jwtSettings.Audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(_jwtSettings.DurationInMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+    
+    public bool ValidateToken(string email, string token)
+    {
+        try
+        {
+            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.Key));
+            var handler = new JwtSecurityTokenHandler();
+
+            handler.ValidateToken(token, new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = "your-issuer",
+                ValidAudience = "your-audience",
+                IssuerSigningKey = securityKey
+            }, out var validatedToken);
+
+            var jwtToken = (JwtSecurityToken)validatedToken;
+            var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+
+            return emailClaim == email;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+    
+
 }

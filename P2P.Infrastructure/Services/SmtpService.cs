@@ -96,9 +96,11 @@ public class SmtpService:ISmtpService
         // Get the application's base directory
         var baseDirectory = AppDomain.CurrentDomain.BaseDirectory;
         var projectRoot = Path.GetFullPath(Path.Combine(baseDirectory, "..", "..", "..", ".."));
+
         Console.WriteLine($"Base Directory: {baseDirectory}");
+        Console.WriteLine($"project root Directory: {projectRoot}");
         // Construct the template path
-        var templatePath = Path.Combine(projectRoot, "P2PWallet.Models", "HtmlTemplates", templateName);
+        var templatePath = Path.Combine(projectRoot, "P2P.Infrastructure", "HtmlTemplates", templateName);
 
         // Log the constructed path for debugging
         Console.WriteLine($"Looking for template at: {templatePath}");

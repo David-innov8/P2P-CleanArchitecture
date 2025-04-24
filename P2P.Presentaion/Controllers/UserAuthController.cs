@@ -14,12 +14,16 @@ public class UserAuthController : ControllerBase
     private readonly IRegisterUserUseCase _registerUserUseCase;
     private readonly ILoginUserUseCase _loginUserUseCase;
     private readonly IUpdatePasswordUseCase _updatePasswordUseCase;
+    private readonly IResetPasswordUseCase _resetPasswordUseCase;
+    private readonly IForgotPasswordCase _forgotPasswordUseCase;
     
-    public UserAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase)
+    public UserAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase, IResetPasswordUseCase resetPasswordUseCase, IForgotPasswordCase forgotPasswordUseCase)
     {
         _registerUserUseCase = registerUserUseCase;
         _loginUserUseCase = loginUserUseCase;
         _updatePasswordUseCase = updatePasswordUseCase;
+        _resetPasswordUseCase = resetPasswordUseCase;
+        _forgotPasswordUseCase = forgotPasswordUseCase;
     }
 
 
@@ -50,6 +54,32 @@ public class UserAuthController : ControllerBase
     {
         var response = await _updatePasswordUseCase.ExecuteAsync(request);
         return  Ok(response);
+    }
+    
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestDto request)
+    {
+        var response = await _forgotPasswordUseCase.ForgotPassword(request);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
+    }
+
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestDto request)
+    {
+        var response = await _resetPasswordUseCase.ResetPassword(request);
+
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+
+        return Ok(response);
     }
 
 }

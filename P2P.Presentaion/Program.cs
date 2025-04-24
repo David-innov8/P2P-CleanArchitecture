@@ -26,12 +26,16 @@ builder.Services.AddDbContext<P2pContext>(options =>
 
 //DI
 builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<IRegisterUserUseCase, SignUpCase>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddScoped<ILoginUserUseCase, LoginCase > ();
 builder.Services.AddScoped<IUpdatePasswordUseCase, UpdatePasswordCase > ();
 builder.Services.AddTransient<ISmtpService, SmtpService>();
+builder.Services.AddScoped<IResetPasswordUseCase, ResetPasswordUseCase>();
+builder.Services.AddScoped<IForgotPasswordCase,ForgetPasswordCase>();
+builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
 builder.Services.AddScoped<SignUpValidator>();
 // Add Controllers
 builder.Services.AddControllers();
@@ -78,6 +82,7 @@ builder.Services.AddHttpContextAccessor();
 
 // Configure JWT
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
