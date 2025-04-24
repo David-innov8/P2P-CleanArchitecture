@@ -8,6 +8,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2P.Domains", "P2P.Domains\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2P.Application", "P2P.Application\P2P.Application.csproj", "{5676349C-BA25-42E0-8984-76A82B8DBDF3}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "P2p.Application.Tests", "P2p.Application.Tests\P2p.Application.Tests.csproj", "{CD6E2A13-9A3F-4CEF-9009-81281A5FB68B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{5676349C-BA25-42E0-8984-76A82B8DBDF3}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5676349C-BA25-42E0-8984-76A82B8DBDF3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5676349C-BA25-42E0-8984-76A82B8DBDF3}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD6E2A13-9A3F-4CEF-9009-81281A5FB68B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD6E2A13-9A3F-4CEF-9009-81281A5FB68B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD6E2A13-9A3F-4CEF-9009-81281A5FB68B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD6E2A13-9A3F-4CEF-9009-81281A5FB68B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
