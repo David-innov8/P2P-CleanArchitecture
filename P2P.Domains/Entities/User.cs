@@ -73,14 +73,14 @@ public class User
         Audit = Audit with { UpdatedAt = DateTime.Now };
     }
     // update methods 
-    public void UpdateEmail(string newEmail)
-    {
-        if (string.IsNullOrWhiteSpace(newEmail) || !newEmail.Contains("@"))
-            throw new ArgumentException("Invalid email address.", nameof(newEmail));
-
-        Email = newEmail;
-        Audit = Audit with { UpdatedAt = DateTime.Now };
-    }
+    // public void UpdateEmail(string newEmail)
+    // {
+    //     if (string.IsNullOrWhiteSpace(newEmail) || !newEmail.Contains("@"))
+    //         throw new ArgumentException("Invalid email address.", nameof(newEmail));
+    //
+    //     Email = newEmail;
+    //     Audit = Audit with { UpdatedAt = DateTime.Now };
+    // }
     public void UpdatePhoneNumber(string newPhoneNumber)
     {
         if (string.IsNullOrWhiteSpace(newPhoneNumber))

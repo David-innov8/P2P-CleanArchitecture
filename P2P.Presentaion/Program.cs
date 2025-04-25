@@ -35,6 +35,7 @@ builder.Services.AddScoped<IUpdatePasswordUseCase, UpdatePasswordCase > ();
 builder.Services.AddTransient<ISmtpService, SmtpService>();
 builder.Services.AddScoped<IResetPasswordUseCase, ResetPasswordUseCase>();
 builder.Services.AddScoped<IForgotPasswordCase,ForgetPasswordCase>();
+builder.Services.AddScoped<ISetPinCase,SetPinCase>();
 builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
 builder.Services.AddScoped<SignUpValidator>();
 // Add Controllers
