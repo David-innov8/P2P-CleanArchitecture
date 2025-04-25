@@ -1,14 +1,19 @@
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using P2P.Application.UseCases;
+using P2P.Application.UseCases.AccountCases;
 using P2P.Application.UseCases.Interfaces;
+using P2P.Application.UseCases.Interfaces.Transfer;
 using P2P.Application.Validators;
 using P2P.Infrastructure.Context;
 using P2P.Infrastructure.Repositories;
 using P2P.Infrastructure.Services;
+using StackExchange.Redis;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,6 +29,13 @@ builder.Services.AddDbContext<P2pContext>(options =>
     )
 );
 
+builder.Services.Configure<JsonSerializerOptions>(options => {
+    options.IgnoreReadOnlyProperties = true;
+    options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+    options.Converters.Add(new JsonStringEnumConverter());
+});
+
+
 //DI
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
@@ -36,8 +48,19 @@ builder.Services.AddTransient<ISmtpService, SmtpService>();
 builder.Services.AddScoped<IResetPasswordUseCase, ResetPasswordUseCase>();
 builder.Services.AddScoped<IForgotPasswordCase,ForgetPasswordCase>();
 builder.Services.AddScoped<ISetPinCase,SetPinCase>();
+builder.Services.AddScoped<ITransactionsRepository, TransactionRepository>();
+builder.Services.AddScoped<ITransferCase, TransferUseCase>();
+builder.Services.AddScoped<ISendOtpCase, SendOtpCase>();
+builder.Services.AddScoped<IOtpService, OtpService>();
 builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
 builder.Services.AddScoped<SignUpValidator>();
+
+//redis configuration 
+builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
+{
+    var configuration = ConfigurationOptions.Parse("localhost:6379,abortConnect=false");
+    return ConnectionMultiplexer.Connect(configuration);
+});
 // Add Controllers
 builder.Services.AddControllers();
 

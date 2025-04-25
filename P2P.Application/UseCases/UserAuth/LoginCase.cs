@@ -13,13 +13,15 @@ public class LoginCase: ILoginUserUseCase
     private readonly IPasswordHasher _passwordHasher;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ISmtpService _smtpService;
 
-    public LoginCase( IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator, IHttpContextAccessor httpContextAccessor)
+    public LoginCase( IUserRepository userRepository, IPasswordHasher passwordHasher, IJwtTokenGenerator jwtTokenGenerator, IHttpContextAccessor httpContextAccessor, ISmtpService smtpService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
         _jwtTokenGenerator = jwtTokenGenerator;
         _httpContextAccessor = httpContextAccessor;
+        _smtpService = smtpService;
     }
 
     public async Task<ApiResponse<LoginResponse>> Login(LoginDto loginDto)
@@ -51,14 +53,15 @@ public class LoginCase: ILoginUserUseCase
         var location = await GetLocationFromIP(IpAddress);
         
         
-        var placeholders = new Dictionary<string, string>
-        {
-            { "{UserName}", existingUser.Username },
-            { "{DeviceName}", userAgent },
-            {"{Location}", location},
-            {"{LoginDateTime}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}
-  
-        };
+        // var placeholders = new Dictionary<string, string>
+        // {
+        //     { "{UserName}", existingUser.Username },
+        //     { "{DeviceName}", userAgent },
+        //     {"{Location}", location},
+        //     {"{LoginDateTime}", DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss")}
+        //
+        // };
+        // await _smtpService.SendEmail(existingUser.Email, "Welcome Back!", "LoginTemplate.html", placeholders);
 
         return ApiResponse<LoginResponse>.SuccessResponse(new LoginResponse()
         {

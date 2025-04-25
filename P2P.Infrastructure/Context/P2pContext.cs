@@ -1,3 +1,4 @@
+using System.Transactions;
 using Microsoft.EntityFrameworkCore;
 using P2P.Domains.Entities;
 
@@ -9,7 +10,8 @@ public class P2pContext :DbContext
 
     public DbSet<User> Users { get; set; }
     public DbSet<Account> Accounts { get; set; }
-
+    
+    public DbSet<Transactions> Transactions { get; set; }
 
 
    
@@ -48,6 +50,12 @@ public class P2pContext :DbContext
             entity.Property(e => e.Balance).HasColumnType("decimal(18,2)");
             entity.Property(e => e.Currency).IsRequired();
         });
+    
+        modelBuilder.Entity<Transactions>()
+            .HasOne(t => t.Account)
+            .WithMany()
+            .HasForeignKey(t => t.AccountId)
+            .OnDelete(DeleteBehavior.Restrict); // Prevent cascading deletes
     }
         
     

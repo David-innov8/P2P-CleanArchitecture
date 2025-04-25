@@ -16,14 +16,16 @@ public class UserAuthController : ControllerBase
     private readonly IUpdatePasswordUseCase _updatePasswordUseCase;
     private readonly IResetPasswordUseCase _resetPasswordUseCase;
     private readonly IForgotPasswordCase _forgotPasswordUseCase;
+    private readonly ISendOtpCase _sendOtp;
     
-    public UserAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase, IResetPasswordUseCase resetPasswordUseCase, IForgotPasswordCase forgotPasswordUseCase)
+    public UserAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase, IResetPasswordUseCase resetPasswordUseCase, IForgotPasswordCase forgotPasswordUseCase, ISendOtpCase sendOtp)
     {
         _registerUserUseCase = registerUserUseCase;
         _loginUserUseCase = loginUserUseCase;
         _updatePasswordUseCase = updatePasswordUseCase;
         _resetPasswordUseCase = resetPasswordUseCase;
         _forgotPasswordUseCase = forgotPasswordUseCase;
+        _sendOtp = sendOtp;
     }
 
 
@@ -34,9 +36,12 @@ public class UserAuthController : ControllerBase
     {
         var response = await _registerUserUseCase.UserSignUp(request);
 
-      
-        
-      return  Ok(response);
+        if (!response.Success)
+        {
+            return BadRequest(response);
+        }
+        return  Ok(response);
+       
     }
 
     [HttpPost("Login")]
@@ -80,6 +85,21 @@ public class UserAuthController : ControllerBase
         }
 
         return Ok(response);
+    }
+    
+    [HttpPost("send-otp")]
+    [Authorize(Roles = "User")]
+    public async Task<IActionResult> SendOtp()
+    {
+        await _sendOtp.Handle();
+        return Ok(new { Message = "OTP sent successfully." });
+    }
+
+    [HttpPost("verify-otp")]
+    public async Task<IActionResult> VerifyOtp([FromBody] ResetPinDTO reset)
+    {
+        await _sendOtp.Verify(reset.otp, reset.newPin);
+        return Ok(new { Message = "OTP Reset successfully." });
     }
 
 }

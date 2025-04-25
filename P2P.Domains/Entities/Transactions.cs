@@ -16,8 +16,13 @@ public class Transactions
     public Guid? AccountId { get; private set; }
 
     public virtual Account Account { get; private set; }
+    
+    private Transactions() 
+    { 
+    }
+
     public Transactions(
-        Guid accountId,
+        Guid AccountId,
         decimal amount,
         CurrencyType currency,
         TransactionType transactionType,
@@ -26,7 +31,7 @@ public class Transactions
         string? paystackReference = null)
     {
         TransactionId = Guid.NewGuid();
-        AccountId = accountId;
+        this.AccountId = AccountId;
         Amount = amount;
         Currency = currency;
         TransactionType = transactionType;

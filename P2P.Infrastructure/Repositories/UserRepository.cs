@@ -27,12 +27,12 @@ public class UserRepository : IUserRepository
 
     public async Task<User> GetUserByEmailAsync(string email)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Email == email);
+        return await _context.Users.Include(u=>u.Accounts).FirstOrDefaultAsync(u => u.Email == email);
     }
 
    public async Task<User> GetUserByUsernameAsync(string username)
     {
-        return await _context.Users.FirstOrDefaultAsync(u => u.Username == username);
+        return await _context.Users.Include(u=>u.Accounts).FirstOrDefaultAsync(u => u.Username == username);
     }
 
     public async Task<User> GetUserFromClaimsAsync()
@@ -45,7 +45,10 @@ public class UserRepository : IUserRepository
         if (!Guid.TryParse(userIdClaim, out var userId))
             throw new Exception("Invalid user ID format in claim.");
 
-        var user = await _context.Users.FindAsync(userId);
+        var user = await _context.Users
+            .Include(u => u.Accounts) // Include the Accounts navigation property
+            .FirstOrDefaultAsync(u => u.Id == userId);
+
 
         if (user == null)
             throw new Exception("User not found.");
