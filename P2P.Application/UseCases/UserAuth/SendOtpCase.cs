@@ -33,6 +33,7 @@ public class SendOtpCase:ISendOtpCase
    
             var placeholders = new Dictionary<string, string>
             {
+                
                 { "{OTPCode}", otp }
             };
         

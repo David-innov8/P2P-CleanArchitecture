@@ -19,16 +19,21 @@ public class Account
         UserId = userId;
         AccountNumber = accountNumber;
         Currency = currency;
-        Balance = 10000;
+        if (currency == CurrencyType.NGN)
+        {
+            Balance = 10000;
+        }
+        Balance = 0;
         
     }
 
     public void Deposit(decimal amount)
     {
-        if(amount < 0)
+        if(amount <= 0)
             throw  new NegativeDepositException("Deposit amount cannot be negative");
-        
+
         Balance += amount;
+        
     }
 
 //basically send money 
@@ -44,13 +49,16 @@ public class Account
         
     }
 
-    public void Transfer(Account fromAccount, Account toAccount, decimal amount)
+    public void Transfer( Account toAccount, decimal amount)
     {
         if (toAccount == null)
             throw new AccountNotFoundException("Recipient account not found.");
 
-        if (fromAccount.Currency != toAccount.Currency)
+        if (this.Currency != toAccount.Currency)
             throw new CurrencyMismatchException("Currency mismatch between accounts.");
+        if (this == toAccount)
+            throw new InvalidOperationException("Cannot transfer to the same account.");
+
 
         if (amount <= 0)
             throw new NegativeDepositException("Transfer amount must be positive.");

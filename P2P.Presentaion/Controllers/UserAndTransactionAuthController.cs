@@ -9,7 +9,7 @@ namespace P2p_Clean_Architecture________b.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class UserAuthController : ControllerBase
+public class UserAndTransactionAuthController : ControllerBase
 {
     private readonly IRegisterUserUseCase _registerUserUseCase;
     private readonly ILoginUserUseCase _loginUserUseCase;
@@ -18,7 +18,7 @@ public class UserAuthController : ControllerBase
     private readonly IForgotPasswordCase _forgotPasswordUseCase;
     private readonly ISendOtpCase _sendOtp;
     
-    public UserAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase, IResetPasswordUseCase resetPasswordUseCase, IForgotPasswordCase forgotPasswordUseCase, ISendOtpCase sendOtp)
+    public UserAndTransactionAuthController(IRegisterUserUseCase registerUserUseCase, ILoginUserUseCase loginUserUseCase, IUpdatePasswordUseCase updatePasswordUseCase, IResetPasswordUseCase resetPasswordUseCase, IForgotPasswordCase forgotPasswordUseCase, ISendOtpCase sendOtp)
     {
         _registerUserUseCase = registerUserUseCase;
         _loginUserUseCase = loginUserUseCase;
@@ -95,8 +95,8 @@ public class UserAuthController : ControllerBase
         return Ok(new { Message = "OTP sent successfully." });
     }
 
-    [HttpPost("verify-otp")]
-    public async Task<IActionResult> VerifyOtp([FromBody] ResetPinDTO reset)
+    [HttpPost("ResetTransactionPin")]
+    public async Task<IActionResult> ResetTransactionPin([FromBody] ResetPinDTO reset)
     {
         await _sendOtp.Verify(reset.otp, reset.newPin);
         return Ok(new { Message = "OTP Reset successfully." });

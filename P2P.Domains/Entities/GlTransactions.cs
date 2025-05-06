@@ -12,7 +12,7 @@ public class GlTransactions
     public decimal NewBalance { get; private set; }
     public string? PaystackReference { get; private set; }
 
-    // Foreign keys
+    // Foreign keys 
     public Guid GlId { get; private set; }
     public Guid UserId { get; private set; }
     public Guid TransactionId { get; private set; }
@@ -24,10 +24,9 @@ public class GlTransactions
         decimal amount,
         CurrencyType currency,
         TransactionType transactionType,
-        decimal oldBalance,
-        decimal newBalance,
-        TransactionStatus? status = null,
-        string? paystackReference = null)
+       
+        TransactionStatus? status = null
+     )
     {
         Id = Guid.NewGuid();
         GlId = glId;
@@ -36,10 +35,8 @@ public class GlTransactions
         Amount = amount;
         Currency = currency;
         TransactionType = transactionType;
-        OldBalance = oldBalance;
-        NewBalance = newBalance;
         Status = status;
-        PaystackReference = paystackReference;
+        // PaystackReference = paystackReference;
         TransactionDate = DateTime.UtcNow;
     }
 }

@@ -5,10 +5,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using P2P.Application.Interfaces.Repositories;
 using P2P.Application.UseCases;
 using P2P.Application.UseCases.AccountCases;
+
 using P2P.Application.UseCases.Interfaces;
+using P2P.Application.UseCases.Interfaces.GeneralLedgers;
 using P2P.Application.UseCases.Interfaces.Transfer;
+using P2P.Application.UseCases.Interfaces.UserAccounts;
 using P2P.Application.Validators;
 using P2P.Infrastructure.Context;
 using P2P.Infrastructure.Repositories;
@@ -23,8 +27,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 // Add DbContext
 builder.Services.AddDbContext<P2pContext>(options =>
-    options.UseSqlServer(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
         sql => sql.MigrationsAssembly("P2P.Infrastructure")
     )
 );
@@ -37,6 +40,7 @@ builder.Services.Configure<JsonSerializerOptions>(options => {
 
 
 //DI
+builder.Services.AddScoped<IGetReciepientDetailsUSeCase , GetReceipeintDetailsUseCase>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
@@ -52,8 +56,18 @@ builder.Services.AddScoped<ITransactionsRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransferCase, TransferUseCase>();
 builder.Services.AddScoped<ISendOtpCase, SendOtpCase>();
 builder.Services.AddScoped<IOtpService, OtpService>();
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IUpdateUserUseCase,UpdateUserDetailsCase>();
+builder.Services.AddScoped<ITransactionHistory, GetTransactionHistoryUseCase>();
+builder.Services.AddScoped<IGetUserAccountDetails, GetUserAccountDetails>();
 builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
+builder.Services.AddScoped<IGLService,GeneralLedgerService>();
+builder.Services.AddScoped<IGLRepository, GLRepository>();
+builder.Services.AddScoped<IInitializeGlCase, InitializeGlUseCase>();
+builder.Services.AddScoped<IGLTransactionRepository, GLTransactionRepository>();
 builder.Services.AddScoped<SignUpValidator>();
+
+builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 //redis configuration 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
@@ -149,6 +163,17 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+    
+    using var scope = app.Services.CreateScope();
+    var initializeGlCase = scope.ServiceProvider.GetRequiredService<IInitializeGlCase>();
+    try
+    {
+        await initializeGlCase.InitializeSystemGLs(); // Initializes all system GLs
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Error initializing GLs: {ex.Message}");
+    }
 }
 
 // -----------------------------

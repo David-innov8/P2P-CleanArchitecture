@@ -7,14 +7,16 @@ using P2P.Infrastructure.Context;
 
 namespace P2P.Infrastructure.Repositories;
 
-public class UserRepository : IUserRepository
+public class UserRepository : Repository<User>, IUserRepository
 {
-    private readonly P2pContext _context;
+    private readonly IUnitOfWork _unitOfWork;
+   private readonly P2pContext _context;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
-    public UserRepository(P2pContext context, IHttpContextAccessor httpContextAccessor)
+    public UserRepository( P2pContext context ,IUnitOfWork unitOfWork, IHttpContextAccessor httpContextAccessor):base(context)
     {
-        _context = context;
+        _unitOfWork = unitOfWork;
+      
         _httpContextAccessor = httpContextAccessor;
     }
 
@@ -22,17 +24,27 @@ public class UserRepository : IUserRepository
 
     public async Task<User> GetByIdAsync(Guid userId)
     {
-        return await _context.Users.FirstOrDefaultAsync(u=> u.Id == userId);
+        return await Find(u=>u.Id == userId);
     }
 
     public async Task<User> GetUserByEmailAsync(string email)
     {
-        return await _context.Users.Include(u=>u.Accounts).FirstOrDefaultAsync(u => u.Email == email);
+        return await Find(u => u.Email == email);
     }
 
-   public async Task<User> GetUserByUsernameAsync(string username)
+    public async Task<User> GetUserByUsernameAsync(string username)
     {
-        return await _context.Users.Include(u=>u.Accounts).FirstOrDefaultAsync(u => u.Username == username);
+        return await Find(u => u.Username == username);
+    }
+
+ 
+    public async Task<User> GetUserWithAccountsByUsernameAsync(string username)
+    {
+        return await _unitOfWork
+            .GetRepository<User>()
+            .Query() 
+            .Include(u => u.Accounts)
+            .FirstOrDefaultAsync(u => u.Username == username);
     }
 
     public async Task<User> GetUserFromClaimsAsync()
@@ -45,26 +57,37 @@ public class UserRepository : IUserRepository
         if (!Guid.TryParse(userIdClaim, out var userId))
             throw new Exception("Invalid user ID format in claim.");
 
-        var user = await _context.Users
-            .Include(u => u.Accounts) // Include the Accounts navigation property
-            .FirstOrDefaultAsync(u => u.Id == userId);
-
+        var user = await Find(u => u.Id == userId);
 
         if (user == null)
             throw new Exception("User not found.");
 
         return user;
     }
+    
+    public async Task<User> GetUserWithAccountsFromClaimsAsync()
+    {
+        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+            throw new Exception("Invalid user claim.");
+
+        return await _unitOfWork
+            .GetRepository<User>()
+            .Query()
+            .Include(u => u.Accounts)
+            .FirstOrDefaultAsync(u => u.Id == userId);
+    }
 
     public async Task<string> GetUserEmailFromClaimsAsync()
     {
-        var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
+        var email = _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.Email)?.Value;
 
-        if (string.IsNullOrEmpty(userIdClaim))
+        if (string.IsNullOrEmpty(email))
             throw new Exception("User ID claim not found.");
 
-     
-        var user = await _context.Users.FindAsync(userIdClaim);
+
+        var user = await GetUserByEmailAsync(email);
+
 
         if (user == null)
             throw new Exception("User not found.");
@@ -74,13 +97,15 @@ public class UserRepository : IUserRepository
 
     public async Task AddUserAsync(User user)
     {
-        await _context.Users.AddAsync(user);
-        await _context.SaveChangesAsync();
+        await AddAsync(user);
+ 
     }
     
     public async Task UpdateUserAsync(User user)
     {
-        _context.Users.Update(user);
-        await _context.SaveChangesAsync();
+        Update(user);
+
     }
+    
+   
 }
