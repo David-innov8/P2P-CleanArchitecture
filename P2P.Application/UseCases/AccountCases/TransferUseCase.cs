@@ -42,7 +42,7 @@ public class TransferUseCase:ITransferCase
         // Step 2: Validate recipient
         var recipient = await _userRepository.GetUserWithAccountsByUsernameAsync(recipientUsername);
         if (recipient == null || string.IsNullOrEmpty(recipient.Username))
-            throw new UserDoesntExistException("Recipient not found or incomplete data.");
+            throw new UserDoesntExistException("Recipient not found ");
 
         if (sender.Username.Equals(recipient.Username, StringComparison.OrdinalIgnoreCase))
         {
@@ -79,12 +79,12 @@ public class TransferUseCase:ITransferCase
             transferGL.UpdateBalance(amount);
              _glRepository.Update(transferGL);
             
-            // 3. Debit deposit GL (can go negative)
+   
             depositGL.UpdateBalance(-amount);
              _glRepository.Update(depositGL);
 
 
-            // Step 6: Record the transaction
+     
             var senderTransaction = new Transactions(
                 senderAccount.Id,
                 -amount,
