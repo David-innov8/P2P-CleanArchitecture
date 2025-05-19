@@ -2,7 +2,7 @@ using P2P.Domains.Entities;
 
 namespace P2P.Application.UseCases.Interfaces;
 
-public interface IUserRepository
+public interface IUserRepository  :IRepository<User>
 {
     Task<User> GetByIdAsync(Guid userId);
    Task<User> GetUserByEmailAsync(string email);
@@ -11,5 +11,11 @@ public interface IUserRepository
     Task AddUserAsync(User user);
 
     Task UpdateUserAsync(User user);
-Task<string> GetUserEmailFromClaimsAsync();
+
+    Task<User> GetUserWithAccountsFromClaimsAsync();
+
+    Task<User> GetUserWithAccountsByUsernameAsync(string username);
+    
+    
+// Task<string> GetUserEmailFromClaimsAsync();
 }

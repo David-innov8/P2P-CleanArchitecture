@@ -5,7 +5,7 @@ namespace P2P.Domains.Entities;
 public class GeneralLedger
 {
     public Guid Id { get; private set; } // Use GUID for better uniqueness
-    public AccountNumber AccountNumber { get; private set; }
+    public GLAccountNumber AccountNumber { get; private set; }
     public string AccountName { get; private set; }
     public decimal Balance { get; private set; }
     public decimal MinimumBalance { get; private set; } = 0m; // Default minimum balance
@@ -14,6 +14,8 @@ public class GeneralLedger
     public DateTime UpdatedAt { get; private set; } = DateTime.UtcNow;
     public string Description { get; private set; }
     public CurrencyType Currency { get; private set; }
+    
+    public GLType Type { get; private set; } 
 
     // Navigation property
     public ICollection<GlTransactions> Audits { get; private set; } = new List<GlTransactions>();
@@ -23,13 +25,15 @@ public class GeneralLedger
         string accountName,
         CurrencyType currency,
         string description,
+        GLType type,
         bool canRunNegative = false,
         decimal minimumBalance = 0m)
     {
         Id = Guid.NewGuid();
-        AccountNumber = AccountNumber.Create(currency, accountName);
+        AccountNumber = GLAccountNumber.Create(currency, type,accountName);
         AccountName = accountName;
         Currency = currency;
+        Type = type;
         Description = description;
         CanRunNegative = canRunNegative;
         MinimumBalance = minimumBalance;

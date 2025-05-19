@@ -73,14 +73,14 @@ public class User
         Audit = Audit with { UpdatedAt = DateTime.Now };
     }
     // update methods 
-    public void UpdateEmail(string newEmail)
-    {
-        if (string.IsNullOrWhiteSpace(newEmail) || !newEmail.Contains("@"))
-            throw new ArgumentException("Invalid email address.", nameof(newEmail));
-
-        Email = newEmail;
-        Audit = Audit with { UpdatedAt = DateTime.Now };
-    }
+    // public void UpdateEmail(string newEmail)
+    // {
+    //     if (string.IsNullOrWhiteSpace(newEmail) || !newEmail.Contains("@"))
+    //         throw new ArgumentException("Invalid email address.", nameof(newEmail));
+    //
+    //     Email = newEmail;
+    //     Audit = Audit with { UpdatedAt = DateTime.Now };
+    // }
     public void UpdatePhoneNumber(string newPhoneNumber)
     {
         if (string.IsNullOrWhiteSpace(newPhoneNumber))
@@ -101,15 +101,17 @@ public class User
     }
 
     // Method to update profile
-    public void UpdateProfile(UserProfile newProfile)
+    public void UpdateProfileLastnaem(string lastname)
     {
-        if (newProfile == null)
-            throw new ArgumentNullException(nameof(newProfile), "Profile is required.");
-
-        Profile = newProfile;
+        var updatedProfile = Profile with
+        {
+            LastName = lastname,
+        };
+       
         Audit = Audit with { UpdatedAt = DateTime.Now }; // Update audit info
     }
     
+   
     public void AddAccount(Account account)
     {
         if (account == null)
