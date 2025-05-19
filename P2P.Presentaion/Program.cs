@@ -1,6 +1,7 @@
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using dotenv.net;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -24,13 +25,13 @@ var builder = WebApplication.CreateBuilder(args);
 // -----------------------------
 // 🔧 Configure Services
 // -----------------------------
-
+DotEnv.Load();
 // Add DbContext
 builder.Services.AddDbContext<P2pContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"),
-        sql => sql.MigrationsAssembly("P2P.Infrastructure")
-    )
-);
+    options.UseSqlServer(Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? 
+                         builder.Configuration.GetConnectionString("DefaultConnection")));
+    
+
 
 builder.Services.Configure<JsonSerializerOptions>(options => {
     options.IgnoreReadOnlyProperties = true;
@@ -38,7 +39,7 @@ builder.Services.Configure<JsonSerializerOptions>(options => {
     options.Converters.Add(new JsonStringEnumConverter());
 });
 
-
+builder.Configuration.AddEnvironmentVariables();
 //DI
 builder.Services.AddScoped<IGetReciepientDetailsUSeCase , GetReceipeintDetailsUseCase>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -127,22 +128,40 @@ var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSetting
 var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
 // Configure JWT Authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-})
-.AddJwtBearer(options =>
-{
+// builder.Services.AddAuthentication(options =>
+// {
+//     options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+//     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+// })
+// .AddJwtBearer(options =>
+// {
+//     options.TokenValidationParameters = new TokenValidationParameters
+//     {
+//         ValidateIssuer = true,
+//         ValidateAudience = true,
+//         ValidateLifetime = true,
+//         ValidateIssuerSigningKey = true,
+//         ValidIssuer = jwtSettings.Issuer,
+//         ValidAudience = jwtSettings.Audience,
+//         IssuerSigningKey = new SymmetricSecurityKey(key)
+//     };
+// });
+
+builder.Services.AddAuthentication(options => {
+    // Authentication setup
+}).AddJwtBearer(options => {
     options.TokenValidationParameters = new TokenValidationParameters
     {
-        ValidateIssuer = true,
-        ValidateAudience = true,
-        ValidateLifetime = true,
         ValidateIssuerSigningKey = true,
-        ValidIssuer = jwtSettings.Issuer,
-        ValidAudience = jwtSettings.Audience,
-        IssuerSigningKey = new SymmetricSecurityKey(key)
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            Environment.GetEnvironmentVariable("JWT_KEY") ?? 
+            builder.Configuration["JwtSettings:Key"])),
+        ValidateIssuer = true,
+        ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? 
+                      builder.Configuration["JwtSettings:Issuer"],
+        ValidateAudience = true,
+        ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? 
+                        builder.Configuration["JwtSettings:Audience"]
     };
 });
 
