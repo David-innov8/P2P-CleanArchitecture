@@ -16,6 +16,7 @@ public class P2pContext :DbContext
     public DbSet<GlTransactions> GlTransactions { get; set; }
     
     public DbSet<Transactions> Transactions { get; set; }
+    public DbSet<EmailOutbox> EmailOutboxes { get; set; }
 
     public class GeneralLedgerConfiguration : IEntityTypeConfiguration<GeneralLedger>
     {
@@ -98,6 +99,37 @@ public class P2pContext :DbContext
                 .WithMany()
                 .HasForeignKey(t => t.UserId);
         });
+
+        modelBuilder.Entity<EmailOutbox>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.To)
+                .IsRequired()
+                .HasMaxLength(255);
+                
+            entity.Property(e => e.Subject)
+                .IsRequired()
+                .HasMaxLength(500);
+                
+            entity.Property(e => e.TemplateName)
+                .IsRequired()
+                .HasMaxLength(100);
+                
+            entity.Property(e => e.PlaceholdersJson)
+                .IsRequired()
+                .HasColumnType("nvarchar(max)");
+                
+            entity.Property(e => e.ErrorMessage)
+                .HasMaxLength(1000);
+                
+            // Indexes for performance
+            entity.HasIndex(e => new { e.IsProcessed, e.RetryCount, e.NextRetryAt })
+                .HasDatabaseName("IX_EmailOutbox_Processing");
+                
+            entity.HasIndex(e => e.CreatedAt)
+                .HasDatabaseName("IX_EmailOutbox_CreatedAt");
+        });
+
     }
         
     

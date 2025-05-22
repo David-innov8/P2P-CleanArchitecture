@@ -2,6 +2,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Transactions;
 using P2P.Application.DTOs;
 using P2P.Application.UseCases.Interfaces;
+using P2P.Application.UseCases.Interfaces.EmailService;
 using P2P.Application.Validators;
 using P2P.Domains;
 using P2P.Domains.Entities;
@@ -18,9 +19,10 @@ public class SignUpCase : IRegisterUserUseCase
     private readonly IAccountRepository _accountRepository;
     private readonly IUnitOfWork _unitOfWork;
     private readonly ISmtpService _smtpService;
+    private readonly IEmailOutboxService _emailOutboxService;
 
     public SignUpCase(IUserRepository userRepository, IPasswordHasher passwordHasher, SignUpValidator validator,
-        IAccountNumberGenerator accountNumberGenerator, IAccountRepository accountRepository, IUnitOfWork unitOfWork, ISmtpService smtpService)
+        IAccountNumberGenerator accountNumberGenerator, IAccountRepository accountRepository, IUnitOfWork unitOfWork, ISmtpService smtpService, IEmailOutboxService emailOutboxService)
     {
         _userRepository = userRepository;
         _passwordHasher = passwordHasher;
@@ -29,6 +31,7 @@ public class SignUpCase : IRegisterUserUseCase
         _accountRepository = accountRepository;
         _unitOfWork = unitOfWork;
         _smtpService = smtpService;
+        _emailOutboxService = emailOutboxService;
     }
 
 
@@ -107,18 +110,23 @@ public class SignUpCase : IRegisterUserUseCase
                 // Complete the transaction
                 scope.Complete();
                 
-                var placeholders = new Dictionary<string, string>
-                {
-                    { "{UserName}", signUpDto.FirstName },
-                    { "{Action}", "Sigining in" },
-                    { "{CallToActionURL}", "https://example.com/dashboard" }, // Update with your actual URL
-                    { "{UnsubscribeURL}", "https://example.com/unsubscribe" } // Update with your actual URL
-                };
-
-                await _smtpService.SendEmail(signUpDto.Email, "Welcome Back!", "WelcomeTemplate.html", placeholders);
-
-                return ApiResponse<string>.SuccessResponse("User successfully signed up.", "Registration Complete");
+             
             }
+            var placeholders = new Dictionary<string, string>
+            {
+                { "{UserName}", signUpDto.FirstName },
+                { "{Action}", "Signing up" },
+                { "{CallToActionURL}", "https://example.com/dashboard" },
+                { "{UnsubscribeURL}", "https://example.com/unsubscribe" }
+            };
+
+            // Queue email asynchronously - this won't block user registration
+            await _emailOutboxService.QueueEmailAsync(
+                signUpDto.Email, 
+                "Welcome to Our Platform!", 
+                "WelcomeTemplate.html", 
+                placeholders);
+            return ApiResponse<string>.SuccessResponse("User successfully signed up.", "Registration Complete");
         }
         catch (Exception ex)
         {

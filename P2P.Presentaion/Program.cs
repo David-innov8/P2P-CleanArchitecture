@@ -12,11 +12,13 @@ using P2P.Application.UseCases;
 using P2P.Application.UseCases.AccountCases;
 
 using P2P.Application.UseCases.Interfaces;
+using P2P.Application.UseCases.Interfaces.EmailService;
 using P2P.Application.UseCases.Interfaces.GeneralLedgers;
 using P2P.Application.UseCases.Interfaces.Paystack;
 using P2P.Application.UseCases.Interfaces.Transfer;
 using P2P.Application.UseCases.Interfaces.UserAccounts;
 using P2P.Application.Validators;
+using P2P.Infrastructure.BackgroundServices;
 using P2P.Infrastructure.Context;
 using P2P.Infrastructure.Repositories;
 using P2P.Infrastructure.Services;
@@ -62,7 +64,7 @@ builder.Services.AddScoped<ITransactionsRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransferCase, TransferUseCase>();
 builder.Services.AddScoped<ISendOtpCase, SendOtpCase>();
 builder.Services.AddScoped<IOtpService, OtpService>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+
 builder.Services.AddScoped<IUpdateUserUseCase,UpdateUserDetailsCase>();
 builder.Services.AddScoped<ITransactionHistory, GetTransactionHistoryUseCase>();
 builder.Services.AddScoped<IGetUserAccountDetails, GetUserAccountDetails>();
@@ -75,7 +77,9 @@ builder.Services.AddScoped<SignUpValidator>();
 builder.Services.AddScoped<IPaystackService, PayStackService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+builder.Services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
+builder.Services.AddScoped<IEmailOutboxService, EmailOutboxService>();
+builder.Services.AddHostedService<EmailProcessingBackgroundService>();
 //redis configuration 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
