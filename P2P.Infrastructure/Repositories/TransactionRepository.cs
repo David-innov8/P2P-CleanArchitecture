@@ -11,7 +11,7 @@ public class TransactionRepository: Repository<Transactions>,ITransactionsReposi
 {
 
     private readonly IUnitOfWork _unitOfWork;
-    private readonly P2pContext _context;
+    // private readonly P2pContext _context;
  
    
     public TransactionRepository(P2pContext context, IUnitOfWork unitOfWork):base(context)
@@ -75,6 +75,23 @@ public class TransactionRepository: Repository<Transactions>,ITransactionsReposi
         return transactions;
     }
  
+    public IQueryable<Transactions> Query()
+    {
+        return base.Query();
+    }
+    
+    public IQueryable<Transactions> QueryWithIncludes(params string[] includes)
+    {
+        IQueryable<Transactions> query = Query();
+        
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        
+        return query;
+    }
+
     
     public async Task<int> CountTransactionsByUserIdAsync(Guid userId)
     {

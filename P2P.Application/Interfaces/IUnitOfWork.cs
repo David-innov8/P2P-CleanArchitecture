@@ -12,4 +12,6 @@ public interface IUnitOfWork: IDisposable
     Task RollbackAsync();
 
     Task SaveChangesAsync();
+    
+    // Task<T> ExecuteSqlScalarAsync<T>(string sql, params object[] parameters);
 }

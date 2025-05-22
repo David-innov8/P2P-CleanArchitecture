@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using P2p_Clean_Architecture________b;
 using P2P.Application.Interfaces.Repositories;
 using P2P.Application.UseCases;
 using P2P.Application.UseCases.AccountCases;
 
 using P2P.Application.UseCases.Interfaces;
 using P2P.Application.UseCases.Interfaces.GeneralLedgers;
+using P2P.Application.UseCases.Interfaces.Paystack;
 using P2P.Application.UseCases.Interfaces.Transfer;
 using P2P.Application.UseCases.Interfaces.UserAccounts;
 using P2P.Application.Validators;
@@ -26,12 +28,14 @@ var builder = WebApplication.CreateBuilder(args);
 // 🔧 Configure Services
 // -----------------------------
 DotEnv.Load();
-// Add DbContext
-builder.Services.AddDbContext<P2pContext>(options =>
-    options.UseSqlServer(Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? 
-                         builder.Configuration.GetConnectionString("DefaultConnection")));
-    
 
+var appSettings = new AppSettings();
+builder.Services.AddSingleton(appSettings);
+// Add DbContext
+builder.Services.AddDbContext<P2pContext>(options => {
+    var appSettings = builder.Services.BuildServiceProvider().GetRequiredService<AppSettings>();
+    options.UseSqlServer(appSettings.ConnectionString);
+});
 
 builder.Services.Configure<JsonSerializerOptions>(options => {
     options.IgnoreReadOnlyProperties = true;
@@ -40,6 +44,7 @@ builder.Services.Configure<JsonSerializerOptions>(options => {
 });
 
 builder.Configuration.AddEnvironmentVariables();
+
 //DI
 builder.Services.AddScoped<IGetReciepientDetailsUSeCase , GetReceipeintDetailsUseCase>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -67,7 +72,8 @@ builder.Services.AddScoped<IGLRepository, GLRepository>();
 builder.Services.AddScoped<IInitializeGlCase, InitializeGlUseCase>();
 builder.Services.AddScoped<IGLTransactionRepository, GLTransactionRepository>();
 builder.Services.AddScoped<SignUpValidator>();
-
+builder.Services.AddScoped<IPaystackService, PayStackService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 //redis configuration 
@@ -123,9 +129,9 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("JwtSettings"));
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
-
-var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
-var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
+//
+// var jwtSettings = builder.Configuration.GetSection("JwtSettings").Get<JwtSettings>();
+// var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
 
 // Configure JWT Authentication
 // builder.Services.AddAuthentication(options =>
@@ -150,21 +156,16 @@ var key = Encoding.UTF8.GetBytes(jwtSettings.Key);
 builder.Services.AddAuthentication(options => {
     // Authentication setup
 }).AddJwtBearer(options => {
-    options.TokenValidationParameters = new TokenValidationParameters
-    {
+    options.TokenValidationParameters = new TokenValidationParameters {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
-            Environment.GetEnvironmentVariable("JWT_KEY") ?? 
-            builder.Configuration["JwtSettings:Key"])),
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(appSettings.JwtKey)),
         ValidateIssuer = true,
-        ValidIssuer = Environment.GetEnvironmentVariable("JWT_ISSUER") ?? 
-                      builder.Configuration["JwtSettings:Issuer"],
+        ValidIssuer = appSettings.JwtIssuer,
         ValidateAudience = true,
-        ValidAudience = Environment.GetEnvironmentVariable("JWT_AUDIENCE") ?? 
-                        builder.Configuration["JwtSettings:Audience"]
+        ValidAudience = appSettings.JwtAudience,
+        ValidateLifetime = true
     };
 });
-
 
 
 

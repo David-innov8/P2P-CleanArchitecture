@@ -9,5 +9,9 @@ public interface IAccountRepository:IRepository<Account>
     Task<IEnumerable<Account>> GetAccountsByUserIdAsync(Guid userId);
     Task<bool> AccountNumberExistsAsync(string accountNumber);
     
+    Task<string> GetHighestAccountNumberAsync();
+    Task<Dictionary<string, bool>> CheckAccountNumbersExistAsync(List<string> accountNumbers);
+
+    
   
 }
