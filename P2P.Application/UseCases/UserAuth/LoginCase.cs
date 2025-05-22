@@ -50,7 +50,7 @@ public class LoginCase: ILoginUserUseCase
         
         var IpAddress = _httpContextAccessor.HttpContext.Connection.RemoteIpAddress.ToString();
         
-        var location = await GetLocationFromIP(IpAddress);
+        // var location = await GetLocationFromIP(IpAddress);
         
         
         // var placeholders = new Dictionary<string, string>

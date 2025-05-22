@@ -18,6 +18,13 @@ public class AppSettings
 
     // Database Connection
     public string ConnectionString { get; }
+    
+    // PayStack Settings
+    public string PaystackSecretKey { get; }
+    public string PaystackPublicKey { get; }
+    public string PaystackBaseUrl { get; }
+    public List<string> PaystackAllowedIPs { get; }
+
 
     public AppSettings()
     {
@@ -37,6 +44,30 @@ public class AppSettings
 
         // Database Connection
         ConnectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING") ?? throw new InvalidOperationException("CONNECTION_STRING environment variable is not set");
-
+        
+        // PayStack Settings
+        PaystackSecretKey = Environment.GetEnvironmentVariable("PAYSTACK_SECRET_KEY") ?? throw new InvalidOperationException("PAYSTACK_SECRET_KEY environment variable is not set");
+        PaystackPublicKey = Environment.GetEnvironmentVariable("PAYSTACK_PUBLIC_KEY") ?? throw new InvalidOperationException("PAYSTACK_PUBLIC_KEY environment variable is not set");
+        PaystackBaseUrl = Environment.GetEnvironmentVariable("PAYSTACK_BASE_URL") ?? "https://api.paystack.co";
+        
+        // Get PayStack allowed IPs
+        PaystackAllowedIPs = new List<string>();
+        
+        // Add IPs from environment variables
+        string? ip1 = Environment.GetEnvironmentVariable("PAYSTACK_ALLOWED_IP_1");
+        string? ip2 = Environment.GetEnvironmentVariable("PAYSTACK_ALLOWED_IP_2");
+        string? ip3 = Environment.GetEnvironmentVariable("PAYSTACK_ALLOWED_IP_3");
+        
+        if (!string.IsNullOrEmpty(ip1)) PaystackAllowedIPs.Add(ip1);
+        if (!string.IsNullOrEmpty(ip2)) PaystackAllowedIPs.Add(ip2);
+        if (!string.IsNullOrEmpty(ip3)) PaystackAllowedIPs.Add(ip3);
+        
+        // Set default PayStack IPs if none provided
+        if (PaystackAllowedIPs.Count == 0)
+        {
+            PaystackAllowedIPs.Add("52.31.139.75");
+            PaystackAllowedIPs.Add("52.49.173.169");
+            PaystackAllowedIPs.Add("52.214.14.220");
+        }
     }
 }

@@ -13,5 +13,8 @@ public interface ITransactionsRepository : IRepository<Transactions>
     Task<int> CountTransactionsByUserIdAsync(Guid userId);
     Task<IEnumerable<Transactions>> GetTransactionsByUserIdAsync(Guid userId, int pageNumber, int pageSize);
 
+    IQueryable<Transactions> Query();
+
+    IQueryable<Transactions> QueryWithIncludes(params string[] includes);
 
 }

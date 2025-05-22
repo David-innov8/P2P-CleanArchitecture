@@ -13,6 +13,7 @@ using P2P.Application.UseCases.AccountCases;
 
 using P2P.Application.UseCases.Interfaces;
 using P2P.Application.UseCases.Interfaces.GeneralLedgers;
+using P2P.Application.UseCases.Interfaces.Paystack;
 using P2P.Application.UseCases.Interfaces.Transfer;
 using P2P.Application.UseCases.Interfaces.UserAccounts;
 using P2P.Application.Validators;
@@ -71,7 +72,8 @@ builder.Services.AddScoped<IGLRepository, GLRepository>();
 builder.Services.AddScoped<IInitializeGlCase, InitializeGlUseCase>();
 builder.Services.AddScoped<IGLTransactionRepository, GLTransactionRepository>();
 builder.Services.AddScoped<SignUpValidator>();
-
+builder.Services.AddScoped<IPaystackService, PayStackService>();
+builder.Services.AddHttpClient();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 //redis configuration 

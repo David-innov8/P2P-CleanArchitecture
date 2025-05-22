@@ -13,19 +13,37 @@ namespace P2P.Infrastructure.Services;
 public class JwtTokenGenerator:IJwtTokenGenerator
 {
     private readonly AppSettings  _appSettings;
-   
+    private static readonly SigningCredentials SigningCredentials;
+    private static readonly TokenValidationParameters ValidationParams;
     public JwtTokenGenerator(AppSettings appSettings)
     {
         _appSettings = appSettings;
         
-
-
     }
+    
+    static JwtTokenGenerator()
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Environment.GetEnvironmentVariable("JWT_KEY") ?? "fallback-secret-key"));
+        SigningCredentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        ValidationParams = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = "your-issuer",
+            ValidAudience = "your-audience",
+            IssuerSigningKey = key,
+            ClockSkew = TimeSpan.Zero
+        };
+    }
+
 
     public string GenerateUserJwtToken(User user)
     {
-        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtKey));
-        var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+        // var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtKey));
+        // var cred = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
 
         var claims = new[]
         {
@@ -39,7 +57,7 @@ public class JwtTokenGenerator:IJwtTokenGenerator
             audience: _appSettings.JwtAudience,
             claims: claims,
             expires: DateTime.UtcNow.AddMinutes(_appSettings.JwtDurationMinutes),
-            signingCredentials: cred
+            signingCredentials: SigningCredentials
         );
         
         return new JwtSecurityTokenHandler().WriteToken(token);
@@ -71,19 +89,10 @@ public class JwtTokenGenerator:IJwtTokenGenerator
     {
         try
         {
-            var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtKey));
+            // var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_appSettings.JwtKey));
             var handler = new JwtSecurityTokenHandler();
 
-            handler.ValidateToken(token, new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = "your-issuer",
-                ValidAudience = "your-audience",
-                IssuerSigningKey = securityKey
-            }, out var validatedToken);
+            handler.ValidateToken(token,ValidationParams, out var validatedToken);
 
             var jwtToken = (JwtSecurityToken)validatedToken;
             var emailClaim = jwtToken.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
