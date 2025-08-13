@@ -78,16 +78,11 @@ public class SignUpCase : IRegisterUserUseCase
         {
             using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
             {
-                // Use TransactionScope to ensure atomicity
 
-
-
-
-
-                // Step 5: Add user to the repository
+          
                 await _userRepository.AddUserAsync(newUser);
                 await _unitOfWork.SaveChangesAsync();
-                // Step 6: Generate a unique account number
+           
                 string accountNumber;
                 bool isAccountNumberUnique = false;
 
@@ -98,31 +93,31 @@ public class SignUpCase : IRegisterUserUseCase
                     isAccountNumberUnique = existingAccount == null;
                 } while (!isAccountNumberUnique);
 
-                // Step 7: Create the account with default currency
+               
                 var defaultAccount = new Account(newUser.Id, accountNumber, CurrencyType.NGN);
 
-                // Step 8: Add account to repository
+           
                 await _accountRepository.AddAsync(defaultAccount);
                 await _unitOfWork.SaveChangesAsync();
-                // Complete the transaction
+       
                 scope.Complete();
                 
                 var placeholders = new Dictionary<string, string>
                 {
                     { "{UserName}", signUpDto.FirstName },
                     { "{Action}", "Sigining in" },
-                    { "{CallToActionURL}", "https://example.com/dashboard" }, // Update with your actual URL
-                    { "{UnsubscribeURL}", "https://example.com/unsubscribe" } // Update with your actual URL
+                    { "{CallToActionURL}", "https://example.com/dashboard" }, 
+                    { "{UnsubscribeURL}", "https://example.com/unsubscribe" } 
                 };
 
-                await _smtpService.SendEmail(signUpDto.Email, "Welcome Back!", "WelcomeTemplate.html", placeholders);
+                // await _smtpService.SendEmail(signUpDto.Email, "Welcome Back!", "WelcomeTemplate.html", placeholders);
 
                 return ApiResponse<string>.SuccessResponse("User successfully signed up.", "Registration Complete");
             }
         }
         catch (Exception ex)
         {
-            // Log the exception
+         
             return ApiResponse<string>.FailedResponse($"An error occurred during registration: {ex.Message}", "Registration Failed");
         }
     }

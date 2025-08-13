@@ -3,15 +3,19 @@ using Microsoft.EntityFrameworkCore.Design;
 
 namespace P2P.Infrastructure.Context;
 
+using dotenv.net;
 public class P2pContextFactory: IDesignTimeDbContextFactory<P2pContext>
 {
     public P2pContext CreateDbContext(string[] args)
     {
+        DotEnv.Load();
+        
         var optionsBuilder = new DbContextOptionsBuilder<P2pContext>();
         
-        // Use the same connection string from appsettings.json
-        var connectionString = "Server=localhost;Database=P2PwalletClean;User Id=SA;Password=MyStrongPass123;TrustServerCertificate=true;";
-        
+        var connectionString = Environment.GetEnvironmentVariable("CONNECTION_STRING")
+                               ?? throw new InvalidOperationException("CONNECTION_STRING environment variable is not set");
+
+
         optionsBuilder.UseSqlServer(connectionString);
         
         return new P2pContext(optionsBuilder.Options);

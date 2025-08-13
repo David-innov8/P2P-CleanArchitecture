@@ -44,7 +44,7 @@ public class SignUpValidator: AbstractValidator<SignUpDto>
         // Validate Phone Number
         RuleFor(dto => dto.PhoneNumber)
             .NotEmpty().WithMessage("Phone number is required.")
-            .Matches(@"^\+?[1-9]\d{1,14}$").WithMessage("Invalid phone number format.");
+            .Matches(@"^\+?[0-9]\d{1,14}$").WithMessage("Invalid phone number format.");
 
         // Validate Password
         RuleFor(dto => dto.Password)

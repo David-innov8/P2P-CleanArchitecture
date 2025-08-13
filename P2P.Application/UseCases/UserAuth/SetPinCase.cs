@@ -16,22 +16,20 @@ public class SetPinCase: ISetPinCase
 
     public async Task Handle(string command)
     {
-        // Fetch the user from the repository
         var user = await _userRepository.GetUserFromClaimsAsync();
         if (user == null)
             throw new InvalidOperationException("User not found.");
-
-        // Hash the raw PIN using the PasswordHasher
+        
         byte[] pinSalt, pinHash;
         _passwordHasher.HashPassword(command, out pinSalt, out pinHash);
 
-        // Create a PinHash value object
+        
         var hashedPin = new PinHash(pinSalt, pinHash);
 
-        // Call the domain method to set the PIN
+        
         user.SetPin(hashedPin);
 
-        // Persist the updated user
+       
         await _userRepository.UpdateUserAsync(user);
     }
 }
