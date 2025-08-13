@@ -46,6 +46,10 @@ public class UnitOfWork: IUnitOfWork
         _transaction = await _context.Database.BeginTransactionAsync();
     }
 
+    public void ExecutionStrategy()
+    {
+         _context.Database.CreateExecutionStrategy();
+    }
     public async Task CommitAsync()
     {
         if (_transaction != null)
@@ -54,6 +58,54 @@ public class UnitOfWork: IUnitOfWork
             await _transaction.DisposeAsync();
             _transaction = null;
         }
+    }
+    
+    
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.SaveChangesAsync(cancellationToken);
+    }
+    public async Task ExecuteInTransactionAsync(Func<Task> operation)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+        await strategy.ExecuteAsync(async () =>
+        {
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                await operation();
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+            }
+            catch (Exception)
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        });
+    }
+    
+    public async Task<T> ExecuteWithinStrategy<T>(Func<Task<T>> operation)
+    {
+        var strategy = _context.Database.CreateExecutionStrategy();
+
+        return await strategy.ExecuteAsync(async () =>
+        {
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    var result = await operation();
+                    await transaction.CommitAsync();
+                    return result;
+                }
+                catch
+                {
+                    await transaction.RollbackAsync();
+                    throw;
+                }
+            }
+        });
     }
 
     public async Task RollbackAsync()

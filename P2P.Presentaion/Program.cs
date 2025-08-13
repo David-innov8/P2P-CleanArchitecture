@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using dotenv.net;
+using Hangfire;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,11 +13,13 @@ using P2P.Application.UseCases;
 using P2P.Application.UseCases.AccountCases;
 
 using P2P.Application.UseCases.Interfaces;
+using P2P.Application.UseCases.Interfaces.EmailService;
 using P2P.Application.UseCases.Interfaces.GeneralLedgers;
 using P2P.Application.UseCases.Interfaces.Paystack;
 using P2P.Application.UseCases.Interfaces.Transfer;
 using P2P.Application.UseCases.Interfaces.UserAccounts;
 using P2P.Application.Validators;
+using P2P.Infrastructure.BackgroundServices;
 using P2P.Infrastructure.Context;
 using P2P.Infrastructure.Repositories;
 using P2P.Infrastructure.Services;
@@ -31,12 +34,27 @@ DotEnv.Load();
 
 var appSettings = new AppSettings();
 builder.Services.AddSingleton(appSettings);
+
+builder.Configuration["DefaultConnection"] = appSettings.ConnectionString;
 // Add DbContext
 builder.Services.AddDbContext<P2pContext>(options => {
     var appSettings = builder.Services.BuildServiceProvider().GetRequiredService<AppSettings>();
-    options.UseSqlServer(appSettings.ConnectionString);
+    options.UseSqlServer(
+        appSettings.ConnectionString,
+        sqlServerOptions => sqlServerOptions.EnableRetryOnFailure() 
+    );
 });
 
+builder.Services.AddHangfire(config =>
+{
+    config.UseSqlServerStorage(appSettings.ConnectionString);
+});
+
+// Add Hangfire server
+builder.Services.AddHangfireServer(options =>
+{
+    options.WorkerCount = 20;
+});
 builder.Services.Configure<JsonSerializerOptions>(options => {
     options.IgnoreReadOnlyProperties = true;
     options.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
@@ -44,6 +62,13 @@ builder.Services.Configure<JsonSerializerOptions>(options => {
 });
 
 builder.Configuration.AddEnvironmentVariables();
+
+
+
+
+
+
+// Use Hangfire dashboard (optional but helpful)
 
 //DI
 builder.Services.AddScoped<IGetReciepientDetailsUSeCase , GetReceipeintDetailsUseCase>();
@@ -62,11 +87,12 @@ builder.Services.AddScoped<ITransactionsRepository, TransactionRepository>();
 builder.Services.AddScoped<ITransferCase, TransferUseCase>();
 builder.Services.AddScoped<ISendOtpCase, SendOtpCase>();
 builder.Services.AddScoped<IOtpService, OtpService>();
-builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
+builder.Services.AddScoped<IAccountNumberGenerator, RedisAccountNumberGenerator>();
+
 builder.Services.AddScoped<IUpdateUserUseCase,UpdateUserDetailsCase>();
 builder.Services.AddScoped<ITransactionHistory, GetTransactionHistoryUseCase>();
 builder.Services.AddScoped<IGetUserAccountDetails, GetUserAccountDetails>();
-builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
+// builder.Services.AddScoped<IAccountNumberGenerator, AccountNumberGenerator>();
 builder.Services.AddScoped<IGLService,GeneralLedgerService>();
 builder.Services.AddScoped<IGLRepository, GLRepository>();
 builder.Services.AddScoped<IInitializeGlCase, InitializeGlUseCase>();
@@ -75,7 +101,9 @@ builder.Services.AddScoped<SignUpValidator>();
 builder.Services.AddScoped<IPaystackService, PayStackService>();
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
-
+builder.Services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
+builder.Services.AddScoped<IEmailOutboxService, EmailOutboxService>();
+builder.Services.AddHostedService<EmailProcessingBackgroundService>();
 //redis configuration 
 builder.Services.AddSingleton<IConnectionMultiplexer>(sp =>
 {
@@ -177,6 +205,12 @@ builder.Services.AddAuthorization();
 // -----------------------------
 
 var app = builder.Build();
+app.UseHangfireDashboard();
+
+RecurringJob.AddOrUpdate<IEmailOutboxService>(
+    "process-pending-emails",
+    service => service.ProcessPendingEmailsAsync(10),
+    Cron.Minutely());
 
 // Use Swagger in Development
 if (app.Environment.IsDevelopment())

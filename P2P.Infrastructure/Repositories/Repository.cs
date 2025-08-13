@@ -32,6 +32,11 @@ public class Repository<T> : IRepository<T> where T : class
     {
          _entities.Update(entity);
     }
+    
+    public async Task UpdateRangeAsync(IEnumerable<T> entities)
+    {
+        await Task.Run(() => _entities.UpdateRange(entities));
+    }
 
     public void Delete(T entity)
     {

@@ -10,6 +10,8 @@ public interface IAccountRepository:IRepository<Account>
     Task<bool> AccountNumberExistsAsync(string accountNumber);
     
     Task<string> GetHighestAccountNumberAsync();
+    
+    
     Task<Dictionary<string, bool>> CheckAccountNumbersExistAsync(List<string> accountNumbers);
 
     
