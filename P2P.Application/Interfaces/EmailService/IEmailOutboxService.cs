@@ -6,9 +6,9 @@ namespace P2P.Application.UseCases.Interfaces.EmailService;
 public interface IEmailOutboxService
 {
 
-  
-    
-    Task QueueEmailAsync(string to, string subject, string templateName, Dictionary<string, string> placeholders);
+
+    void QueueEmail(string to, string subject, string templateName, Dictionary<string, string> placeholders);
+    // Task QueueEmailAsync(string to, string subject, string templateName, Dictionary<string, string> placeholders);
     Task<int> ProcessPendingEmailsAsync(int batchSize = 10);
     Task<EmailOutboxStats> GetStatsAsync();
 }

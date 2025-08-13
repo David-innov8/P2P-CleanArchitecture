@@ -40,7 +40,12 @@ public class ResetPasswordUseCase:IResetPasswordUseCase
         }
         
         byte[] passwordSalt, passwordHash;
-        var hashedPassword = _passwordHasher.HashPassword(request.NewPassword, out passwordSalt, out passwordHash);
+        // var hashedPassword = _passwordHasher.HashPassword(request.NewPassword, out passwordSalt, out passwordHash);
+
+        
+        var (hash, salt) = await _passwordHasher.HashPasswordAsync(request.NewPassword);
+        passwordHash = Convert.FromBase64String(hash); 
+        passwordSalt = salt;
 
         var newPasswordValueObject = new PasswordHash(passwordHash, passwordSalt);
 

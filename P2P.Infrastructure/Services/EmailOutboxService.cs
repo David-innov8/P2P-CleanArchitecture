@@ -1,3 +1,4 @@
+using Hangfire;
 using Microsoft.Extensions.Logging;
 using P2P.Application.DTOs;
 using P2P.Application.Interfaces.Repositories;
@@ -26,14 +27,38 @@ public class EmailOutboxService:IEmailOutboxService
         _logger = logger;
     }
     
-     public async Task QueueEmailAsync(string to, string subject, string templateName, Dictionary<string, string> placeholders)
+    
+    public void QueueEmail(string to, string subject, string templateName, Dictionary<string, string> placeholders)
+    {
+        // Fire-and-forget background job
+        BackgroundJob.Enqueue(() => SendEmailInBackground(to, subject, templateName, placeholders));
+    }
+    
+    [DisableConcurrentExecution(10)] // Prevent same job from running concurrently
+    public async Task SendEmailInBackground(string to, string subject, string templateName, Dictionary<string, string> placeholders)
+    {
+        try
         {
             var emailOutbox = new EmailOutbox(to, subject, templateName, placeholders);
             await _emailOutboxRepository.AddAsync(emailOutbox);
             await _unitOfWork.SaveChangesAsync();
-            
+
             _logger.LogInformation("Email queued for {To} with subject: {Subject}", to, subject);
         }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to queue email for {To}", to);
+        }
+    }
+
+     // public async Task QueueEmailAsync(string to, string subject, string templateName, Dictionary<string, string> placeholders)
+     //    {
+     //          new EmailOutbox(to, subject, templateName, placeholders);
+     //        await _emailOutboxRepository.AddAsync(emailOutbox);
+     //        await _unitOfWork.SaveChangesAsync();
+     //        
+     //        _logger.LogInformation("Email queued for {To} with subject: {Subject}", to, subject);
+     //    }
 
         public async Task<int> ProcessPendingEmailsAsync(int batchSize = 10)
         {

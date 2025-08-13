@@ -37,20 +37,20 @@ public class SignUpCase : IRegisterUserUseCase
 
       public async Task<ApiResponse<string>> UserSignUp(SignUpDto signUpDto)
     {  
-        FluentValidation.Results.ValidationResult validationResult = _validator.Validate(signUpDto);
-                     if (!validationResult.IsValid)
-                     {
-                         // Combine all validation error messages into a single string
-                         var errorMessage = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
-                         return ApiResponse<string>.FailedResponse(errorMessage, "Validation Failed");
-                     }
+        // FluentValidation.Results.ValidationResult validationResult = _validator.Validate(signUpDto);
+        //              if (!validationResult.IsValid)
+        //              {
+        //                  // Combine all validation error messages into a single string
+        //                  var errorMessage = string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage));
+        //                  return ApiResponse<string>.FailedResponse(errorMessage, "Validation Failed");
+        //              }
                      
-                     var existingUser =  _userRepository.Query().FirstOrDefault(u=> u.Email == signUpDto.Email || u.Username == signUpDto.Username);
+        var existingUser =  _userRepository.Query().FirstOrDefault(u=> u.Email == signUpDto.Email || u.Username == signUpDto.Username);
                 
-                     if (existingUser != null)
-                     {
-                         if (existingUser.Username == signUpDto.Username)
-                         {
+        if (existingUser != null)
+        {
+            if (existingUser.Username == signUpDto.Username)
+                        {
                              return ApiResponse<string>.FailedResponse("Username is already taken.", "Duplicate Username");
                          }
                          else
@@ -60,7 +60,11 @@ public class SignUpCase : IRegisterUserUseCase
                      }
                      
                      byte[] passwordSalt, passwordHash;
-                     _passwordHasher.HashPassword(signUpDto.Password, out passwordSalt, out passwordHash);
+                     // _passwordHasher.HashPasswordAsync(signUpDto.Password, out passwordSalt, out passwordHash);
+                     
+                     var (hash, salt) = await _passwordHasher.HashPasswordAsync(signUpDto.Password);
+                     passwordHash = Convert.FromBase64String(hash); 
+                     passwordSalt = salt;
 
                      var passwordValueObject = new PasswordHash(passwordHash, passwordSalt);
                 
@@ -79,39 +83,60 @@ public class SignUpCase : IRegisterUserUseCase
         
         try
         {
-            using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            // using (var scope = new TransactionScope(TransactionScopeAsyncFlowOption.Enabled))
+            // {
+            //     // Use TransactionScope to ensure atomicity
+            //
+            //
+            //
+            //
+            //
+            //     // Step 5: Add user to the repository
+            //     await _userRepository.AddUserAsync(newUser);
+            //     await _unitOfWork.SaveChangesAsync();
+            //     // Step 6: Generate a unique account number
+            //     string accountNumber;
+            //     bool isAccountNumberUnique = false;
+            //
+            //     do
+            //     {
+            //         accountNumber =await  _accountNumberGenerator.GenerateAccNoAsync();
+            //         var existingAccount = await _accountRepository.GetAccountByNumberAsync(accountNumber);
+            //         isAccountNumberUnique = existingAccount == null;
+            //     } while (!isAccountNumberUnique);
+            //
+            //     // Step 7: Create the account with default currency
+            //     var defaultAccount = new Account(newUser.Id, accountNumber, CurrencyType.NGN);
+            //
+            //     // Step 8: Add account to repository
+            //     await _accountRepository.AddAsync(defaultAccount);
+            //     await _unitOfWork.SaveChangesAsync();
+            //     // Complete the transaction
+            //     scope.Complete();
+            //     
+            //  
+            // }
+            
+            await _unitOfWork.ExecuteInTransactionAsync(async () =>
             {
-                // Use TransactionScope to ensure atomicity
-
-
-
-
-
-                // Step 5: Add user to the repository
+                // Add user
                 await _userRepository.AddUserAsync(newUser);
                 await _unitOfWork.SaveChangesAsync();
-                // Step 6: Generate a unique account number
+
                 string accountNumber;
                 bool isAccountNumberUnique = false;
-
                 do
                 {
-                    accountNumber = _accountNumberGenerator.GenerateAccNo();
+                    accountNumber = await _accountNumberGenerator.GenerateAccNoAsync();
                     var existingAccount = await _accountRepository.GetAccountByNumberAsync(accountNumber);
                     isAccountNumberUnique = existingAccount == null;
                 } while (!isAccountNumberUnique);
 
-                // Step 7: Create the account with default currency
                 var defaultAccount = new Account(newUser.Id, accountNumber, CurrencyType.NGN);
-
-                // Step 8: Add account to repository
                 await _accountRepository.AddAsync(defaultAccount);
                 await _unitOfWork.SaveChangesAsync();
-                // Complete the transaction
-                scope.Complete();
-                
-             
-            }
+            });
+            
             var placeholders = new Dictionary<string, string>
             {
                 { "{UserName}", signUpDto.FirstName },
@@ -121,11 +146,18 @@ public class SignUpCase : IRegisterUserUseCase
             };
 
             // Queue email asynchronously - this won't block user registration
-            await _emailOutboxService.QueueEmailAsync(
-                signUpDto.Email, 
-                "Welcome to Our Platform!", 
-                "WelcomeTemplate.html", 
-                placeholders);
+            
+          
+            // _emailOutboxService.QueueEmail(  signUpDto.Email, 
+            //     "Welcome to Our Platform!", 
+            //     "WelcomeTemplate.html", 
+            //     placeholders
+            // );
+            // await _emailOutboxService.QueueEmailAsync(
+            //     signUpDto.Email, 
+            //     "Welcome to Our Platform!", 
+            //     "WelcomeTemplate.html", 
+            //     placeholders);
             return ApiResponse<string>.SuccessResponse("User successfully signed up.", "Registration Complete");
         }
         catch (Exception ex)
